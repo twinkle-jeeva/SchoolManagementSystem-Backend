@@ -7,3 +7,5 @@ obj/
 *.pdb
 appsettings.Development.json
 *.log
+# Ignore local settings
+appsettings.json
