@@ -1,106 +1,93 @@
+using AutoMapper;
 using StudentDemoAPI.DTOs;
-using StudentDemoAPI.Helpers;
 using StudentDemoAPI.Models;
 using StudentDemoAPI.Repositories;
+using StudentDemoAPI.Repositories.Interfaces;
+using StudentDemoAPI.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace StudentDemoAPI.Services
 {
-    public class StudentService
+    public class StudentService : IStudentService
     {
-        private readonly IStudentRepository _repo;
+        private readonly IStudentRepository _studentRepository;
+        private readonly ICourseRepository _courseRepository;
+        private readonly IMapper _mapper;
 
-        public StudentService(IStudentRepository repo)
+        public StudentService(
+            IStudentRepository studentRepository,
+            ICourseRepository courseRepository,
+            IMapper mapper)
         {
-            _repo = repo;
+            _studentRepository = studentRepository;
+            _courseRepository = courseRepository;
+            _mapper = mapper;
         }
 
-        // GET all students
-        public async Task<List<StudentDto>> GetAllStudentsAsync()
+        public async Task<List<StudentDto>> GetAllAsync()
         {
-            var students = await _repo.GetAllAsync();
-            return students.Select(StudentMapper.ToDto).ToList();
+            var students = await _studentRepository.GetAllAsync();
+            return _mapper.Map<List<StudentDto>>(students);
         }
 
-        // GET by Id
         public async Task<StudentDto?> GetByIdAsync(int id)
         {
-            var student = await _repo.GetByIdAsync(id);
-            return student == null ? null : StudentMapper.ToDto(student);
+            var student = await _studentRepository.GetByIdAsync(id);
+            return student == null ? null : _mapper.Map<StudentDto>(student);
         }
 
-        // CREATE student
         public async Task<StudentDto> CreateAsync(StudentCreateDto dto)
         {
-            // Check for duplicate email
-            var existing = (await _repo.GetAllAsync())
-                .Any(s => s.Email.ToLower() == dto.Email.ToLower());
+            // Check course exists
+            var course = await _courseRepository.GetByIdAsync(dto.CourseId);
+            if (course == null) throw new Exception("Invalid Course Id");
 
-            if (existing)
-                throw new Exception("Email already exists. Please use a different email.");
+            // Check unique email
+            if (await _studentRepository.ExistsByEmailAsync(dto.Email))
+                throw new Exception("Email already exists");
 
-            // Map basic student and profile
-            var student = StudentMapper.ToEntity(dto);
+            var student = _mapper.Map<Student>(dto);
+            await _studentRepository.AddAsync(student);
+            await _studentRepository.SaveChangesAsync();
 
-            //  Handle Clubs (many-to-many)
-            if (dto.ClubIds != null && dto.ClubIds.Any())
-            {
-                var clubs = await _repo.GetClubsByIdsAsync(dto.ClubIds);
-
-                foreach (var club in clubs)
-                    student.Clubs.Add(club);
-            }
-
-            //  Add to repository & save
-            await _repo.AddAsync(student);
-            await _repo.SaveChangesAsync();
-
-            return StudentMapper.ToDto(student);
+            return _mapper.Map<StudentDto>(student);
         }
 
-        // UPDATE student
         public async Task<StudentDto?> UpdateAsync(int id, StudentUpdateDto dto)
         {
-            var student = await _repo.GetByIdAsync(id);
-            if (student == null) return null;
+            var existing = await _studentRepository.GetByIdAsync(id);
+            if (existing == null) return null;
 
-            // 1️⃣ Update basic fields
-            student.FirstName = dto.FirstName;
-            student.LastName = dto.LastName;
-            student.Email = dto.Email;
-            student.DateOfBirth = dto.DateOfBirth;
-            student.CourseId = dto.CourseId;
-
-            // 2️⃣ Update profile
-            if (student.Profile == null)
-                student.Profile = new StudentProfile();
-
-            student.Profile.Address = dto.Address;
-            student.Profile.Phone = dto.Phone;
-
-            // 3️⃣ Update Clubs (many-to-many)
-            if (dto.ClubIds != null)
+            // Check email uniqueness if changed
+            if (!string.IsNullOrEmpty(dto.Email) && dto.Email != existing.Email)
             {
-                var clubs = await _repo.GetClubsByIdsAsync(dto.ClubIds);
-                student.Clubs.Clear(); // remove old clubs
-                foreach (var club in clubs)
-                    student.Clubs.Add(club);
+                if (await _studentRepository.ExistsByEmailAsync(dto.Email))
+                    throw new Exception("Email already exists");
             }
 
-            // 4️⃣ Update in repository & save
-            await _repo.UpdateAsync(student);
-            await _repo.SaveChangesAsync();
+            // Check course exists
+            var course = await _courseRepository.GetByIdAsync(dto.CourseId);
+            if (course == null) throw new Exception("Invalid Course Id");
 
-            return StudentMapper.ToDto(student);
+            // Map updates
+            _mapper.Map(dto, existing);
+
+            await _studentRepository.UpdateAsync(existing);
+            await _studentRepository.SaveChangesAsync();
+
+            return _mapper.Map<StudentDto>(existing);
         }
 
-        // DELETE student
         public async Task<bool> DeleteAsync(int id)
         {
-            var student = await _repo.GetByIdAsync(id);
+            var student = await _studentRepository.GetByIdAsync(id);
             if (student == null) return false;
 
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
+            await _studentRepository.DeleteAsync(student);
+            await _studentRepository.SaveChangesAsync();
+
             return true;
         }
     }

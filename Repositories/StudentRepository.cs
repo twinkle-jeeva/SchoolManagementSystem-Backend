@@ -1,71 +1,58 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using StudentDemoAPI.Data;
 using StudentDemoAPI.Models;
+using StudentDemoAPI.Repositories.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace StudentDemoAPI.Repositories
+namespace StudentDemoAPI.Repositories;
+
+public class StudentRepository : IStudentRepository
 {
-    public class StudentRepository : IStudentRepository
+    private readonly ApplicationDbContext _context;
+
+    public StudentRepository(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
+        _context = context;
+    }
 
-        public StudentRepository(ApplicationDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<List<Student>> GetAllAsync()
+    {
+        // Include Course for CourseName mapping
+        return await _context.Students
+            .Include(s => s.Course)
+            .ToListAsync();
+    }
 
-        public async Task<IEnumerable<Student>> GetAllAsync()
-        {
-            return await _context.Students
-                .Include(s => s.Course)
-                .Include(s => s.Clubs)
-                .Include(s => s.Profile)
-                .ToListAsync();
-        }
-        public async Task<List<Club>> GetClubsByIdsAsync(List<int> ids)
-{
-    return await _context.Clubs
-        .Where(c => ids.Contains(c.Id))
-        .ToListAsync();
-}
+    public async Task<Student?> GetByIdAsync(int id)
+    {
+        return await _context.Students
+            .Include(s => s.Course)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
 
+    public async Task AddAsync(Student student)
+    {
+        await _context.Students.AddAsync(student);
+    }
 
-        public async Task<Student> GetByIdAsync(int id)
-        {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await _context.Students
-                .Include(s => s.Course)
-                .Include(s => s.Clubs)
-                .Include(s => s.Profile)
-                .FirstOrDefaultAsync(s => s.Id == id);
-#pragma warning restore CS8603 // Possible null reference return.
+    public async Task UpdateAsync(Student student)
+    {
+        _context.Students.Update(student);
+    }
 
-        }
+    public async Task DeleteAsync(Student student)
+    {
+        _context.Students.Remove(student);
+    }
 
-        public async Task AddAsync(Student student)
-        {
-            await _context.Students.AddAsync(student);
-        }
+    public async Task<bool> ExistsByEmailAsync(string email)
+    {
+        return await _context.Students.AnyAsync(s => s.Email == email);
+    }
 
-        public  Task UpdateAsync(Student student)
-        {
-            _context.Students.Update(student);
-             return Task.CompletedTask;
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var student = await GetByIdAsync(id);
-            if (student != null)
-            {
-                _context.Students.Remove(student);
-            }
-        }
-
-        public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
-
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 }
