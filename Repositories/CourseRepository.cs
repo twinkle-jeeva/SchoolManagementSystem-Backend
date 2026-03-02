@@ -40,7 +40,7 @@ namespace StudentDemoAPI.Repositories
 
         public async Task<Course?> UpdateAsync(Course course)
         {
-            var existing = await _context.Courses.FindAsync(course.Id);
+   var existing = await _context.Courses.FindAsync(course.Id);
             if (existing == null) return null;
 
             _context.Entry(existing).CurrentValues.SetValues(course);

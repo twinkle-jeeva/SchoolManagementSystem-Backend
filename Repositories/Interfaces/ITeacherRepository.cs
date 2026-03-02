@@ -1,16 +1,12 @@
 using StudentDemoAPI.Models;
 
-namespace StudentDemoAPI.Repositories.Interfaces
+public interface ITeacherRepository
 {
-    public interface ITeacherRepository
-    {
-        Task<List<Teacher>> GetAllAsync();
-        Task<Teacher?> GetByIdAsync(int id);
-        Task AddAsync(Teacher teacher);
-        Task UpdateAsync(Teacher teacher);
-        Task DeleteAsync(int id);
-        Task SaveChangesAsync();
-        Task<bool> ExistsByEmailAsync(string email);
-
-    }
+    Task<List<Teacher>> GetAllAsync();
+    Task<Teacher?> GetByIdAsync(int id);
+    Task AddAsync(Teacher teacher);
+    void Update(Teacher teacher);
+    void Delete(Teacher teacher);
+    Task<bool> EmailExistsAsync(string email);
+    Task SaveChangesAsync();
 }

@@ -15,7 +15,8 @@ namespace StudentDemoAPI.Models
     public int? GradeLevel { get; set; }       
     public int? Credits { get; set; }          
     public DateTime? StartDate { get; set; }   
-    public DateTime? EndDate { get; set; }     
+    public DateTime? EndDate { get; set; } 
+    public string? Department { get; set; }    
     public int? TeacherId { get; set; }         
     public Teacher? Teacher { get; set; }       
 

@@ -15,6 +15,8 @@ namespace StudentDemoAPI.DTOs
 
         [StringLength(500)]
         public string? Description { get; set; }
+        public string? Department { get; set; }
+
 
         public bool IsActive { get; set; }
 

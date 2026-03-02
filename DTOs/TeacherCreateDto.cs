@@ -1,31 +1,32 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace StudentDemoAPI.DTOs
 {
     public class TeacherCreateDto
     {
-        [Required(ErrorMessage = "First Name is required")]
+        [Required, StringLength(50)]
         public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Last Name is required")]
+        [Required, StringLength(50)]
         public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid Email format")]
+        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Phone is required")]
-        public string Phone { get; set; } = string.Empty;
+        [StringLength(20)]
+        public string? Phone { get; set; }
 
-        public string Address { get; set; } = string.Empty;
+        [StringLength(200)]
+        public string? Address { get; set; }
 
-        [Required(ErrorMessage = "Joining Date is required")]
+        public string? Department { get; set; }
+
+        [Required]
         public DateTime JoiningDate { get; set; }
 
-        [Required(ErrorMessage = "Education is required")]
+        [StringLength(200)]
         public string Education { get; set; } = string.Empty;
-        public List<int>? CourseIds { get; set; }  
-
     }
 }

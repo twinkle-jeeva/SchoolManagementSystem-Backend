@@ -11,6 +11,8 @@ namespace StudentDemoAPI.DTOs
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
+        public string? Department { get; set; }
+
         public bool IsActive { get; set; }
         public int? GradeLevel { get; set; }
         public int? Credits { get; set; }

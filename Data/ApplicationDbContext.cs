@@ -16,8 +16,11 @@ namespace StudentDemoAPI.Data
         public DbSet<Student> Students { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Subject> Subjects { get; set; }
-
         public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<Parent> Parents { get; set; }
+        public DbSet<EmergencyContact> Emergency_Contacts { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -111,6 +114,54 @@ modelBuilder.Entity<Student>(entity =>
           .HasForeignKey(c => c.TeacherId)
           .OnDelete(DeleteBehavior.SetNull);
 });
+    // Parent
+    modelBuilder.Entity<Parent>(entity =>
+    {
+        entity.HasKey(p => p.Id);
+
+        entity.Property(p => p.FirstName)
+              .IsRequired()
+              .HasMaxLength(100);
+
+        entity.Property(p => p.LastName)
+              .IsRequired()
+              .HasMaxLength(100);
+
+        entity.Property(p => p.Email)
+              .IsRequired();
+
+        entity.HasIndex(p => p.Email)
+              .IsUnique();
+
+        entity.Property(p => p.Phone)
+              .HasMaxLength(20);
+
+        entity.Property(p => p.Address)
+              .HasMaxLength(250);
+
+        entity.HasMany(p => p.EmergencyContacts)
+              .WithOne(c => c.Parent)
+              .HasForeignKey(c => c.ParentId)
+              .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    // EmergencyContact
+    modelBuilder.Entity<EmergencyContact>(entity =>
+    {
+        entity.HasKey(c => c.Id);
+
+        entity.Property(c => c.Name)
+              .IsRequired()
+              .HasMaxLength(100);
+
+        entity.Property(c => c.Phone)
+              .IsRequired()
+              .HasMaxLength(20);
+
+        entity.Property(c => c.Relationship)
+              .HasMaxLength(50);
+    });
+
 
                 }
     }
