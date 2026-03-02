@@ -3,6 +3,7 @@ School Management System (Backend)
 This is the backend of a School Management System built using .NET 10 (ASP.NET Core Web API). The system is designed with real-world architecture in mind, following Repository + Service patterns, DTOs with validation, and ready for full-stack integration.
 
 It includes management for Students, Teachers, Courses, Subjects, Parents, and Emergency Contacts.
+
 🛠️ Technologies Used
 
 .NET 10 / ASP.NET Core Web API
@@ -92,6 +93,4 @@ Entity relationships & database design
 DTO mapping and validation with AutoMapper
 Preparing backend for JWT authentication and secure full-stack integration
 
-DTO mapping and validation with AutoMapper
 
-Preparing backend for JWT authentication and secure full-stack integration
