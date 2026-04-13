@@ -9,4 +9,6 @@ public interface ITeacherRepository
     void Delete(Teacher teacher);
     Task<bool> EmailExistsAsync(string email);
     Task SaveChangesAsync();
+    IQueryable<Teacher> GetQueryable();
+
 }

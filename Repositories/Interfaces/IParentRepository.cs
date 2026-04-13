@@ -13,5 +13,6 @@ namespace StudentDemoAPI.Repositories.Interfaces
         Task DeleteAsync(Parent parent);
         Task<bool> ExistsByStudentIdAsync(int studentId);
         Task SaveChangesAsync();
+        IQueryable<Parent> GetQueryable();
     }
 }

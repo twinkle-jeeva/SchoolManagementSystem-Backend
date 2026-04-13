@@ -1,11 +1,16 @@
 using AutoMapper;
 using StudentDemoAPI.DTOs;
+using StudentDemoAPI.DTOs.Common;
 using StudentDemoAPI.Models;
+using StudentDemoAPI.Helpers;
 using StudentDemoAPI.Repositories;
 using StudentDemoAPI.Repositories.Interfaces;
 using StudentDemoAPI.Services.Interfaces;
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace StudentDemoAPI.Services
@@ -26,25 +31,74 @@ namespace StudentDemoAPI.Services
             _mapper = mapper;
         }
 
-        public async Task<List<StudentDto>> GetAllAsync()
+        // Get paginated, searchable, sortable students
+        public async Task<PagedResult<StudentDto>> GetStudentsAsync(
+            ClaimsPrincipal user,
+            QueryParamsDto request)
         {
-            var students = await _studentRepository.GetAllAsync();
-            return _mapper.Map<List<StudentDto>>(students);
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+            var email = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            IQueryable<Student> query = _studentRepository.GetQueryable()
+                        .Include(s => s.Course)
+                        .Include(s => s.Parents)
+                            .ThenInclude(p => p.EmergencyContacts);
+
+
+            // Role-based access
+            if (role == Roles.Parent)
+                query = query.Where(s => s.Parents.Any(p => p.Email == email));
+            else if (role == Roles.Student)
+                query = query.Where(s => s.Email == email);
+            else if (role == Roles.Teacher)
+                query = query.Where(s => s.Course != null && s.Course.Teacher != null && s.Course.Teacher.Email == email);
+
+            // Search
+            query = query.ApplySearch(request.Search,
+                        s => s.FirstName,
+                        s => s.LastName,
+                        s => s.Email);
+
+            // Sorting
+            query = query.ApplySorting(request.SortBy, request.IsDescending);
+
+            // Total count before pagination
+            var total = await query.CountAsync();
+
+            // Pagination
+            var pagedData = await query
+                .ApplyPagination(request.PageNumber, request.PageSize)
+                .ToListAsync();
+
+            var studentDtos = _mapper.Map<List<StudentDto>>(pagedData);
+
+            return new PagedResult<StudentDto>
+            {
+                Items = studentDtos,
+                TotalCount = total,
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize
+            };
         }
 
+        // Get student by ID
         public async Task<StudentDto?> GetByIdAsync(int id)
         {
-            var student = await _studentRepository.GetByIdAsync(id);
+            var student = await _studentRepository.GetQueryable()
+                .Include(s => s.Course)
+                .Include(s => s.Parents)
+                    .ThenInclude(p => p.EmergencyContacts)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             return student == null ? null : _mapper.Map<StudentDto>(student);
         }
 
+        // Create new student
         public async Task<StudentDto> CreateAsync(StudentCreateDto dto)
         {
-            // Check course exists
             var course = await _courseRepository.GetByIdAsync(dto.CourseId);
             if (course == null) throw new Exception("Invalid Course Id");
 
-            // Check unique email
             if (await _studentRepository.ExistsByEmailAsync(dto.Email))
                 throw new Exception("Email already exists");
 
@@ -55,23 +109,22 @@ namespace StudentDemoAPI.Services
             return _mapper.Map<StudentDto>(student);
         }
 
+        // Update student
         public async Task<StudentDto?> UpdateAsync(int id, StudentUpdateDto dto)
         {
             var existing = await _studentRepository.GetByIdAsync(id);
             if (existing == null) return null;
 
-            // Check email uniqueness if changed
             if (!string.IsNullOrEmpty(dto.Email) && dto.Email != existing.Email)
             {
                 if (await _studentRepository.ExistsByEmailAsync(dto.Email))
                     throw new Exception("Email already exists");
             }
-
-            // Check course exists
-            var course = await _courseRepository.GetByIdAsync(dto.CourseId);
+if (dto.CourseId.HasValue)
+{
+            var course = await _courseRepository.GetByIdAsync(dto.CourseId.Value);
             if (course == null) throw new Exception("Invalid Course Id");
-
-            // Map updates
+}
             _mapper.Map(dto, existing);
 
             await _studentRepository.UpdateAsync(existing);
@@ -80,6 +133,7 @@ namespace StudentDemoAPI.Services
             return _mapper.Map<StudentDto>(existing);
         }
 
+        // Delete student
         public async Task<bool> DeleteAsync(int id)
         {
             var student = await _studentRepository.GetByIdAsync(id);

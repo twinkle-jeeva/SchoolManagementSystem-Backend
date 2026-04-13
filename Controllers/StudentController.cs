@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using StudentDemoAPI.DTOs;
+using StudentDemoAPI.DTOs.Common;
 using StudentDemoAPI.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,14 +18,16 @@ namespace StudentDemoAPI.Controllers
         public StudentsController(IStudentService studentService)
         {
             _studentService = studentService;
-        }
-
+        } 
+        
+        [Authorize]
         [HttpGet]
-        public async Task<ActionResult<List<StudentDto>>> GetAll()
-        {
-            var students = await _studentService.GetAllAsync();
-            return Ok(students);
-        }
+        public async Task<ActionResult<PagedResult<StudentDto>>> GetStudents(
+        [FromQuery] QueryParamsDto request)
+       {
+         var result = await _studentService.GetStudentsAsync(User, request);
+         return Ok(result);
+       }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<StudentDto>> GetById(int id)
@@ -33,7 +37,8 @@ namespace StudentDemoAPI.Controllers
             return Ok(student);
         }
 
-        [HttpPost]
+        [Authorize]
+         [HttpPost]
         public async Task<ActionResult<StudentDto>> Create([FromBody] StudentCreateDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -49,6 +54,7 @@ namespace StudentDemoAPI.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<ActionResult<StudentDto>> Update(int id, [FromBody] StudentUpdateDto dto)
         {

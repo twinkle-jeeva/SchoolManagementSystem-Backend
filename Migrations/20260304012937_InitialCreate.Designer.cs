@@ -12,8 +12,8 @@ using StudentDemoAPI.Data;
 namespace StudentDemoAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260226002327_AddDepartmentToCourse")]
-    partial class AddDepartmentToCourse
+    [Migration("20260304012937_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -73,6 +73,89 @@ namespace StudentDemoAPI.Migrations
                     b.HasIndex("TeacherId");
 
                     b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("StudentDemoAPI.Models.EmergencyContact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("Emergency_Contacts");
+                });
+
+            modelBuilder.Entity("StudentDemoAPI.Models.Parent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Parents");
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Student", b =>
@@ -236,6 +319,9 @@ namespace StudentDemoAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -252,6 +338,8 @@ namespace StudentDemoAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ParentId");
+
                     b.HasIndex("StudentId");
 
                     b.HasIndex("TeacherId");
@@ -267,6 +355,17 @@ namespace StudentDemoAPI.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("StudentDemoAPI.Models.EmergencyContact", b =>
+                {
+                    b.HasOne("StudentDemoAPI.Models.Parent", "Parent")
+                        .WithMany("EmergencyContacts")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Student", b =>
@@ -296,6 +395,10 @@ namespace StudentDemoAPI.Migrations
 
             modelBuilder.Entity("StudentDemoAPI.Models.User", b =>
                 {
+                    b.HasOne("StudentDemoAPI.Models.Parent", "Parent")
+                        .WithMany()
+                        .HasForeignKey("ParentId");
+
                     b.HasOne("StudentDemoAPI.Models.Student", "Student")
                         .WithMany()
                         .HasForeignKey("StudentId");
@@ -303,6 +406,8 @@ namespace StudentDemoAPI.Migrations
                     b.HasOne("StudentDemoAPI.Models.Teacher", "Teacher")
                         .WithMany()
                         .HasForeignKey("TeacherId");
+
+                    b.Navigation("Parent");
 
                     b.Navigation("Student");
 
@@ -314,6 +419,11 @@ namespace StudentDemoAPI.Migrations
                     b.Navigation("Students");
 
                     b.Navigation("Subjects");
+                });
+
+            modelBuilder.Entity("StudentDemoAPI.Models.Parent", b =>
+                {
+                    b.Navigation("EmergencyContacts");
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Teacher", b =>

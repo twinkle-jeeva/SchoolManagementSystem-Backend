@@ -17,10 +17,25 @@ namespace StudentDemoAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "8.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ParentStudent", b =>
+                {
+                    b.Property<int>("ParentsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ParentsId", "StudentsId");
+
+                    b.HasIndex("StudentsId");
+
+                    b.ToTable("StudentParents", (string)null);
+                });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Course", b =>
                 {
@@ -35,7 +50,8 @@ namespace StudentDemoAPI.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("Credits")
+                    b.Property<int?>("Credits")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Department")
@@ -45,10 +61,12 @@ namespace StudentDemoAPI.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("GradeLevel")
+                    b.Property<int?>("GradeLevel")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -59,7 +77,8 @@ namespace StudentDemoAPI.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<DateTime?>("StartDate")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("TeacherId")
@@ -88,7 +107,7 @@ namespace StudentDemoAPI.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("ParentId")
+                    b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
                     b.Property<string>("Phone")
@@ -101,11 +120,16 @@ namespace StudentDemoAPI.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Emergency_Contacts");
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("EmergencyContacts");
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Parent", b =>
@@ -143,9 +167,6 @@ namespace StudentDemoAPI.Migrations
                     b.Property<string>("Relationship")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -344,6 +365,21 @@ namespace StudentDemoAPI.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ParentStudent", b =>
+                {
+                    b.HasOne("StudentDemoAPI.Models.Parent", null)
+                        .WithMany()
+                        .HasForeignKey("ParentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudentDemoAPI.Models.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StudentDemoAPI.Models.Course", b =>
                 {
                     b.HasOne("StudentDemoAPI.Models.Teacher", "Teacher")
@@ -359,10 +395,17 @@ namespace StudentDemoAPI.Migrations
                     b.HasOne("StudentDemoAPI.Models.Parent", "Parent")
                         .WithMany("EmergencyContacts")
                         .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("StudentDemoAPI.Models.Student", "Student")
+                        .WithMany("EmergencyContacts")
+                        .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Parent");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Student", b =>
@@ -419,6 +462,11 @@ namespace StudentDemoAPI.Migrations
                 });
 
             modelBuilder.Entity("StudentDemoAPI.Models.Parent", b =>
+                {
+                    b.Navigation("EmergencyContacts");
+                });
+
+            modelBuilder.Entity("StudentDemoAPI.Models.Student", b =>
                 {
                     b.Navigation("EmergencyContacts");
                 });

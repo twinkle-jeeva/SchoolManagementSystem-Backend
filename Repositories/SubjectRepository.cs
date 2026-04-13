@@ -68,5 +68,15 @@ namespace StudentDemoAPI.Repositories
         {
             return await _context.Subjects.AnyAsync(s => s.Id == id);
         }
+         public async Task SaveChangesAsync()
+       {
+          await _context.SaveChangesAsync();
+       }
+       public IQueryable<Subject> GetQueryable()
+      {
+         return _context.Subjects.Include(s => s.Course).AsQueryable();
+      }
+
+
     }
 }

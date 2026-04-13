@@ -7,3 +7,6 @@ obj/
 *.pdb
 appsettings.Development.json
 *.log
+# Sensitive files
+appsettings.json
+appsettings.*.json

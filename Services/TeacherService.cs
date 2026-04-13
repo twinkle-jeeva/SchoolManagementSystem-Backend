@@ -1,6 +1,9 @@
 using AutoMapper;
 using StudentDemoAPI.DTOs;
+using StudentDemoAPI.DTOs.Common;
 using StudentDemoAPI.Models;
+using StudentDemoAPI.Helpers;
+using System.Security.Claims;
 
 public class TeacherService : ITeacherService
 {
@@ -12,6 +15,62 @@ public class TeacherService : ITeacherService
         _repository = repository;
         _mapper = mapper;
     }
+        public async Task<PagedResult<TeacherDto>> GetTeachersAsync(
+    ClaimsPrincipal user,
+    QueryParamsDto queryParams)
+{
+    var role = user.FindFirst(ClaimTypes.Role)?.Value;
+    var email = user.FindFirst(ClaimTypes.Email)?.Value;
+
+    IQueryable<Teacher> query = _repository.GetQueryable()
+        .Include(t => t.Courses)
+        .Include(t => t.Subjects);
+
+    // Role-based access
+    if (role == Roles.Teacher)
+    {
+        // Teachers only see their own record
+        query = query.Where(t => t.Email == email);
+    }
+    // Admin sees all, no filter
+
+    // 🔍 Search
+    query = query.ApplySearch(queryParams.Search,
+        t => t.FirstName,
+        t => t.LastName,
+        t => t.Email,
+        t => t.Department,
+        t => t.Education);
+
+    // 🔃 Sorting
+    if (queryParams.SortBy == "FullName")
+    {
+        query = queryParams.IsDescending
+            ? query.OrderByDescending(t => t.FirstName + " " + t.LastName)
+            : query.OrderBy(t => t.FirstName + " " + t.LastName);
+    }
+    else
+    {
+        query = query.ApplySorting(queryParams.SortBy, queryParams.IsDescending);
+    }
+
+    // Total count
+    var total = await query.CountAsync();
+
+    // Pagination + AutoMapper projection
+    var items = await query
+        .ApplyPagination(queryParams.PageNumber, queryParams.PageSize)
+        .ProjectTo<TeacherDto>(_mapper.ConfigurationProvider)
+        .ToListAsync();
+
+    return new PagedResult<TeacherDto>
+    {
+        Items = items,
+        TotalCount = total,
+        PageNumber = queryParams.PageNumber,
+        PageSize = queryParams.PageSize
+    };
+}
 
     public async Task<List<TeacherDto>> GetAllAsync()
     {

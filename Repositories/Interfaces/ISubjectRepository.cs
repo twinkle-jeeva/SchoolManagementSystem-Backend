@@ -12,5 +12,9 @@ namespace StudentDemoAPI.Repositories
         Task<Subject?> UpdateAsync(Subject subject);
         Task<bool> DeleteAsync(int id);
         Task<bool> ExistsAsync(int id);
+        Task SaveChangesAsync();
+        IQueryable<Subject> GetQueryable();
+
+        
     }
 }

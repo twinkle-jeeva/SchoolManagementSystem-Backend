@@ -6,11 +6,30 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StudentDemoAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCoursesTable : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Parents",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Relationship = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Parents", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Teachers",
                 columns: table => new
@@ -22,6 +41,7 @@ namespace StudentDemoAPI.Migrations
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     JoiningDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Education = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -29,6 +49,29 @@ namespace StudentDemoAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Teachers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Emergency_Contacts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ParentId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Relationship = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Emergency_Contacts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Emergency_Contacts_Parents_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Parents",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -45,6 +88,7 @@ namespace StudentDemoAPI.Migrations
                     Credits = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TeacherId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -64,13 +108,13 @@ namespace StudentDemoAPI.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CourseId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -124,11 +168,17 @@ namespace StudentDemoAPI.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StudentId = table.Column<int>(type: "int", nullable: true),
-                    TeacherId = table.Column<int>(type: "int", nullable: true)
+                    TeacherId = table.Column<int>(type: "int", nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Parents_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Parents",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Users_Students_StudentId",
                         column: x => x.StudentId,
@@ -145,6 +195,17 @@ namespace StudentDemoAPI.Migrations
                 name: "IX_Courses_TeacherId",
                 table: "Courses",
                 column: "TeacherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Emergency_Contacts_ParentId",
+                table: "Emergency_Contacts",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Parents_Email",
+                table: "Parents",
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Students_CourseId",
@@ -174,6 +235,11 @@ namespace StudentDemoAPI.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_ParentId",
+                table: "Users",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_StudentId",
                 table: "Users",
                 column: "StudentId");
@@ -188,10 +254,16 @@ namespace StudentDemoAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Emergency_Contacts");
+
+            migrationBuilder.DropTable(
                 name: "Subjects");
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Parents");
 
             migrationBuilder.DropTable(
                 name: "Students");

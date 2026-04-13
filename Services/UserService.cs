@@ -3,6 +3,7 @@ using StudentDemoAPI.DTOs;
 using StudentDemoAPI.Models;
 using StudentDemoAPI.Repositories.Interfaces;
 using StudentDemoAPI.Services.Interfaces;
+using BCrypt.Net;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -20,16 +21,17 @@ namespace StudentDemoAPI.Services
             _mapper = mapper;
         }
 
+        
         public async Task<UserDto> CreateAsync(UserCreateDto dto)
         {
-            if (await _repo.ExistsByEmailAsync(dto.Email))
-                throw new Exception("Email already exists");
+          if (await _repo.ExistsByEmailAsync(dto.Email))
+          throw new Exception("Email already exists");
 
-            var user = _mapper.Map<User>(dto);
-            await _repo.AddAsync(user);
-            await _repo.SaveChangesAsync();
-
-            return _mapper.Map<UserDto>(user);
+           var user = _mapper.Map<User>(dto);
+           user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+           await _repo.AddAsync(user);
+           await _repo.SaveChangesAsync();
+           return _mapper.Map<UserDto>(user);
         }
 
         public async Task<UserDto?> GetByIdAsync(int id)

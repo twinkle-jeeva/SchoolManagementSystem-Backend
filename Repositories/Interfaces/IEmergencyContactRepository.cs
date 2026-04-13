@@ -12,5 +12,6 @@ namespace StudentDemoAPI.Repositories.Interfaces
         Task UpdateAsync(EmergencyContact contact);
         Task DeleteAsync(EmergencyContact contact);
         Task SaveChangesAsync();
+        IQueryable<EmergencyContact> GetQueryable();
     }
 }

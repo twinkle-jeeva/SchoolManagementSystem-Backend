@@ -45,14 +45,20 @@ namespace StudentDemoAPI.Repositories
             _context.Parents.Remove(parent);
         }
 
-        public async Task<bool> ExistsByStudentIdAsync(int studentId)
-        {
-            return await _context.Parents.AnyAsync(p => p.StudentId == studentId);
-        }
-
+   public async Task<bool> ExistsByStudentIdAsync(int studentId)
+       {
+          return await _context.Parents
+        .AnyAsync(p => p.Students.Any(s => s.Id == studentId));
+       }
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+        public IQueryable<Parent> GetQueryable()
+        {
+          return _context.Parents
+          .Include(p => p.Students)
+          .Include(p => p.EmergencyContacts);
         }
     }
 }

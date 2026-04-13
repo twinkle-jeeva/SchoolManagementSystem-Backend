@@ -10,5 +10,7 @@ namespace StudentDemoAPI.Repositories.Interfaces
         Task<List<User>> GetAllAsync();
         Task<bool> ExistsByEmailAsync(string email);
         Task SaveChangesAsync();
+        IQueryable<User> GetQueryable();
+
     }
 }

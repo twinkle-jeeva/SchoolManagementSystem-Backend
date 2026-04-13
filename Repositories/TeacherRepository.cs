@@ -51,4 +51,10 @@ public class TeacherRepository : ITeacherRepository
     {
         await _context.SaveChangesAsync();
     }
+    public IQueryable<Teacher> GetQueryable()
+{
+    return _context.Teachers.AsQueryable();
+}
+
+
 }

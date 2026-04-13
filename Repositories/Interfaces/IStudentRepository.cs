@@ -13,4 +13,7 @@ public interface IStudentRepository
     Task DeleteAsync(Student student);
     Task<bool> ExistsByEmailAsync(string email);
     Task SaveChangesAsync();
+    IQueryable<Student> GetQueryable();
+    
+
 }

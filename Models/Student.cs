@@ -1,20 +1,24 @@
-using System;
-using System.ComponentModel.DataAnnotations;
-
 namespace StudentDemoAPI.Models
 {
     public class Student
-{
-    public int Id { get; set; }
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public DateTime DateOfBirth { get; set; }
-    public string? Address { get; set; }
-    public string? Phone { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    {
+        public int Id { get; set; }
 
-    public int? CourseId { get; set; }
-    public Course? Course { get; set; }
-}
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+
+        public DateTime DateOfBirth { get; set; }
+        public string? Address { get; set; }
+        public string? Phone { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CourseId { get; set; }
+        public Course? Course { get; set; }
+
+        public ICollection<Parent> Parents { get; set; } = new List<Parent>();
+
+        public ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
+    }
 }

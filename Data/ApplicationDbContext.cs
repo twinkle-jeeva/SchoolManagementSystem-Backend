@@ -11,14 +11,14 @@ namespace StudentDemoAPI.Data
         }
 
         // Tables
-      public DbSet<User> Users { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public DbSet<Student> Students { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<Subject> Subjects { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Parent> Parents { get; set; }
-        public DbSet<EmergencyContact> Emergency_Contacts { get; set; }
+        public DbSet<EmergencyContact> EmergencyContacts  { get; set; }
 
 
 
@@ -27,42 +27,34 @@ namespace StudentDemoAPI.Data
             base.OnModelCreating(modelBuilder);
 
             // STUDENT CONFIGURATION
-modelBuilder.Entity<Student>(entity =>
-{
-    entity.HasKey(s => s.Id);
+    modelBuilder.Entity<Student>(entity =>
+    {
+        entity.HasKey(s => s.Id);
 
-    entity.Property(s => s.FirstName)
-          .IsRequired()
-          .HasMaxLength(50);
+        entity.Property(s => s.FirstName).IsRequired().HasMaxLength(50);
+        entity.Property(s => s.LastName).IsRequired().HasMaxLength(50);
+        entity.Property(s => s.Email).IsRequired().HasMaxLength(100);
 
-    entity.Property(s => s.LastName)
-          .IsRequired()
-          .HasMaxLength(50);
+        entity.HasIndex(s => s.Email).IsUnique();
 
-    entity.Property(s => s.Email)
-          .IsRequired()
-          .HasMaxLength(100);
+        entity.Property(s => s.DateOfBirth).IsRequired();
+        entity.Property(s => s.Address).HasMaxLength(200);
+        entity.Property(s => s.Phone).HasMaxLength(20);
 
-    entity.HasIndex(s => s.Email)
-          .IsUnique();
+        entity.Property(s => s.CreatedAt)
+              .HasDefaultValueSql("GETUTCDATE()");
 
-    entity.Property(s => s.DateOfBirth)
-          .IsRequired();
+        entity.HasOne(s => s.Course)
+              .WithMany(c => c.Students)
+              .HasForeignKey(s => s.CourseId)
+              .OnDelete(DeleteBehavior.SetNull);
+    });
 
-    entity.Property(s => s.Address)
-          .HasMaxLength(200);
+    modelBuilder.Entity<Student>()
+        .HasMany(s => s.Parents)
+        .WithMany(p => p.Students)
+        .UsingEntity(j => j.ToTable("StudentParents"));
 
-    entity.Property(s => s.Phone)
-          .HasMaxLength(20);
-
-    entity.Property(s => s.CreatedAt)
-          .HasDefaultValueSql("GETUTCDATE()");
-
-    entity.HasOne(s => s.Course)
-          .WithMany(c => c.Students)
-          .HasForeignKey(s => s.CourseId)
-          .OnDelete(DeleteBehavior.SetNull);
-});
             // TEACHER CONFIGURATION
             modelBuilder.Entity<Teacher>(entity =>
             {
@@ -147,20 +139,30 @@ modelBuilder.Entity<Student>(entity =>
 
     // EmergencyContact
     modelBuilder.Entity<EmergencyContact>(entity =>
-    {
-        entity.HasKey(c => c.Id);
+{
+    entity.HasKey(e => e.Id);
 
-        entity.Property(c => c.Name)
-              .IsRequired()
-              .HasMaxLength(100);
+    entity.Property(e => e.Name)
+          .IsRequired()
+          .HasMaxLength(100);
 
-        entity.Property(c => c.Phone)
-              .IsRequired()
-              .HasMaxLength(20);
+    entity.Property(e => e.Phone)
+          .IsRequired()
+          .HasMaxLength(20);
 
-        entity.Property(c => c.Relationship)
-              .HasMaxLength(50);
-    });
+    entity.Property(e => e.Relationship)
+          .HasMaxLength(50);
+
+    entity.HasOne(e => e.Parent)
+          .WithMany(p => p.EmergencyContacts)
+          .HasForeignKey(e => e.ParentId)
+          .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(e => e.Student)
+          .WithMany(s => s.EmergencyContacts)
+          .HasForeignKey(e => e.StudentId)
+          .OnDelete(DeleteBehavior.Cascade);
+});
 
 
                 }

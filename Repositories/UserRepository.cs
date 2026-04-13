@@ -26,5 +26,9 @@ namespace StudentDemoAPI.Repositories
             await _context.Users.AnyAsync(u => u.Email == email);
 
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+        public IQueryable<User> GetQueryable()
+{
+    return _context.Users.AsQueryable();
+}
     }
 }

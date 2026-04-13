@@ -55,4 +55,11 @@ public class StudentRepository : IStudentRepository
     {
         await _context.SaveChangesAsync();
     }
+public IQueryable<Student> GetQueryable()
+{
+    return _context.Students
+        .Include(s => s.Course)
+        .Include(s => s.Parents)
+            .ThenInclude(p => p.EmergencyContacts);
+}
 }
